@@ -122,25 +122,25 @@ libspdm_return_t pci_doe_send_receive_data(const void *pci_doe_context,
 void *spdm_client_init(void)
 {
     void *spdm_context;
-    uint8_t index;
+    // uint8_t index;
     libspdm_return_t status;
-    bool res;
-    void *data;
-    void *data1;
+    // bool res;
+    // void *data;
+    // void *data1;
     size_t data_size;
-    size_t data1_size;
+    // size_t data1_size;
     libspdm_data_parameter_t parameter;
     uint8_t data8;
     uint16_t data16;
     uint32_t data32;
-    void *hash;
-    void *hash1;
-    size_t hash_size;
-    size_t hash1_size;
-    const uint8_t *root_cert;
-    const uint8_t *root_cert1;
-    size_t root_cert_size;
-    size_t root_cert1_size;
+    // void *hash;
+    // void *hash1;
+    // size_t hash_size;
+    // size_t hash1_size;
+    // const uint8_t *root_cert;
+    // const uint8_t *root_cert1;
+    // size_t root_cert_size;
+    // size_t root_cert1_size;
     spdm_version_number_t spdm_version;
     size_t scratch_buffer_size;
     uint32_t requester_capabilities_flag;
@@ -169,6 +169,11 @@ void *spdm_client_init(void)
             spdm_context, libspdm_transport_mctp_encode_message,
             libspdm_transport_mctp_decode_message,
             libspdm_transport_mctp_get_header_size);
+    } else if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_VTPM) {
+        libspdm_register_transport_layer_func(
+            spdm_context, libspdm_transport_vtpm_encode_message,
+            libspdm_transport_vtpm_decode_message,
+            libspdm_transport_vtpm_get_header_size);
     } else if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_PCI_DOE) {
         libspdm_register_transport_layer_func(
             spdm_context, libspdm_transport_pci_doe_encode_message,
@@ -367,6 +372,7 @@ void *spdm_client_init(void)
                      &data16, &data_size);
     m_use_req_asym_algo = data16;
 
+#if 0
     if ((m_use_requester_capability_flags &
          SPDM_GET_CAPABILITIES_REQUEST_FLAGS_PUB_KEY_ID_CAP) != 0) {
         m_use_slot_id = 0xFF;
@@ -445,7 +451,8 @@ void *spdm_client_init(void)
             return NULL;
         }
     }
-
+#endif
+#if 0
     if (m_use_req_asym_algo != 0) {
         res = libspdm_read_requester_public_certificate_chain(m_use_hash_algo,
                                                               m_use_req_asym_algo,
@@ -469,7 +476,7 @@ void *spdm_client_init(void)
             return NULL;
         }
     }
-
+#endif
     status = libspdm_set_data(spdm_context, LIBSPDM_DATA_PSK_HINT, NULL,
                               LIBSPDM_TEST_PSK_HINT_STRING,
                               sizeof(LIBSPDM_TEST_PSK_HINT_STRING));

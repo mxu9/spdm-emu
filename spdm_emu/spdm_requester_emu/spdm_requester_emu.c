@@ -67,6 +67,10 @@ bool platform_client_routine(uint16_t port_number)
         }
 
         m_socket = platform_socket;
+
+        int a;
+        printf("init_client is done. Press any key to continue\n");
+        scanf("%d", &a);
     }
 
     if (m_use_transport_layer != SOCKET_TRANSPORT_TYPE_NONE) {
@@ -94,43 +98,61 @@ bool platform_client_routine(uint16_t port_number)
     if (m_spdm_context == NULL) {
         goto done;
     }
+    int a;
+    printf(">> spdm_client_init is done. Press any key to continue\n");
+    scanf("%d", &a);
 
     /* Do test - begin*/
 #if (LIBSPDM_ENABLE_CAPABILITY_CERT_CAP && LIBSPDM_ENABLE_CAPABILITY_CHAL_CAP)
+    printf(">> do_authentication_via_spdm is to start. Press any key to continue\n");
+    scanf("%d", &a);
+
     status = do_authentication_via_spdm();
+
+    printf(">> do_authentication_via_spdm is done (%x). Press any key to continue\n", status);
+    scanf("%d", &a);
+
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
         printf("do_authentication_via_spdm - %x\n", (uint32_t)status);
         goto done;
     }
+
 #endif /*(LIBSPDM_ENABLE_CAPABILITY_CERT_CAP && LIBSPDM_ENABLE_CAPABILITY_CHAL_CAP)*/
 
 #if LIBSPDM_ENABLE_CAPABILITY_MEAS_CAP
-    if ((m_exe_connection & EXE_CONNECTION_MEAS) != 0) {
-        status = do_measurement_via_spdm(NULL);
-        if (LIBSPDM_STATUS_IS_ERROR(status)) {
-            printf("do_measurement_via_spdm - %x\n",
-                   (uint32_t)status);
-            goto done;
-        }
-    }
+    // if ((m_exe_connection & EXE_CONNECTION_MEAS) != 0) {
+    //     status = do_measurement_via_spdm(NULL);
+    //     if (LIBSPDM_STATUS_IS_ERROR(status)) {
+    //         printf("do_measurement_via_spdm - %x\n",
+    //                (uint32_t)status);
+    //         goto done;
+    //     }
+    // }
 #endif /*LIBSPDM_ENABLE_CAPABILITY_MEAS_CAP*/
     /* when use --trans NONE, skip secure session  */
-    if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_NONE) {
-        if (m_use_version >= SPDM_MESSAGE_VERSION_12) {
-            status = do_certificate_provising_via_spdm(NULL);
-            if (LIBSPDM_STATUS_IS_ERROR(status)) {
-                printf("do_certificate_provising_via_spdm - %x\n",
-                       (uint32_t)status);
-                goto done;
-            }
-        }
-    }
-    else
+    // if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_NONE) {
+    //     if (m_use_version >= SPDM_MESSAGE_VERSION_12) {
+    //         status = do_certificate_provising_via_spdm(NULL);
+    //         if (LIBSPDM_STATUS_IS_ERROR(status)) {
+    //             printf("do_certificate_provising_via_spdm - %x\n",
+    //                    (uint32_t)status);
+    //             goto done;
+    //         }
+    //     }
+    // }
+    // else
     {
 #if (LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP || LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP)
         if (m_use_version >= SPDM_MESSAGE_VERSION_11) {
             if ((m_exe_session & EXE_SESSION_KEY_EX) != 0) {
+                printf(">> do_session_via_spdm is to start. Press any key to continue\n");
+                scanf("%d", &a);
+
                 status = do_session_via_spdm(false);
+
+                printf(">> do_session_via_spdm is done (%x). Press any key to continue\n", status);
+                scanf("%d", &a);
+
                 if (LIBSPDM_STATUS_IS_ERROR(status)) {
                     printf("do_session_via_spdm - %x\n",
                            (uint32_t)status);
@@ -138,25 +160,25 @@ bool platform_client_routine(uint16_t port_number)
                 }
             }
 
-            if ((m_exe_session & EXE_SESSION_PSK) != 0) {
-                status = do_session_via_spdm(true);
-                if (LIBSPDM_STATUS_IS_ERROR(status)) {
-                    printf("do_session_via_spdm - %x\n",
-                           (uint32_t)status);
-                    goto done;
-                }
-            }
-            if ((m_exe_session & EXE_SESSION_KEY_EX) != 0) {
-                if (m_use_slot_id == 0) {
-                    m_use_slot_id =  1;
-                    status = do_session_via_spdm(false);
-                    if (LIBSPDM_STATUS_IS_ERROR(status)) {
-                        printf("do_session_via_spdm - %x\n",
-                               (uint32_t)status);
-                        goto done;
-                    }
-                }
-            }
+            // if ((m_exe_session & EXE_SESSION_PSK) != 0) {
+            //     status = do_session_via_spdm(true);
+            //     if (LIBSPDM_STATUS_IS_ERROR(status)) {
+            //         printf("do_session_via_spdm - %x\n",
+            //                (uint32_t)status);
+            //         goto done;
+            //     }
+            // }
+            // if ((m_exe_session & EXE_SESSION_KEY_EX) != 0) {
+            //     if (m_use_slot_id == 0) {
+            //         m_use_slot_id =  1;
+            //         status = do_session_via_spdm(false);
+            //         if (LIBSPDM_STATUS_IS_ERROR(status)) {
+            //             printf("do_session_via_spdm - %x\n",
+            //                    (uint32_t)status);
+            //             goto done;
+            //         }
+            //     }
+            // }
         }
 #endif /*(LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP || LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP)*/
     }
@@ -193,6 +215,10 @@ int main(int argc, char *argv[])
     srand((unsigned int)time(NULL));
 
     process_args("spdm_requester_emu", argc, argv);
+
+    int a;
+    printf("Press any key to start...\n");
+    scanf("%d", &a);
 
     if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_TCP) {
         /* Port number 4194 for SPDM */

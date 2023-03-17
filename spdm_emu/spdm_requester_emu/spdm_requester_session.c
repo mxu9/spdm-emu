@@ -24,6 +24,7 @@ libspdm_return_t do_measurement_via_spdm(const uint32_t *session_id);
 
 libspdm_return_t pci_doe_process_session_message(void *spdm_context, uint32_t session_id);
 libspdm_return_t mctp_process_session_message(void *spdm_context, uint32_t session_id);
+libspdm_return_t vtpm_process_session_message(void *spdm_context, uint32_t session_id);
 libspdm_return_t do_certificate_provising_via_spdm(uint32_t* session_id);
 
 libspdm_return_t do_app_session_via_spdm(uint32_t session_id)
@@ -35,6 +36,10 @@ libspdm_return_t do_app_session_via_spdm(uint32_t session_id)
 
     if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_MCTP) {
         status = mctp_process_session_message (m_spdm_context, session_id);
+    }
+
+    if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_VTPM) {
+        status = vtpm_process_session_message(m_spdm_context, session_id);
     }
 
     return status;
@@ -79,90 +84,110 @@ libspdm_return_t do_session_via_spdm(bool use_psk)
     uint32_t session_id;
     uint8_t heartbeat_period;
     uint8_t measurement_hash[LIBSPDM_MAX_HASH_SIZE];
-    size_t response_size;
-    bool result;
-    uint32_t response;
+    // size_t response_size;
+    // bool result;
+    // uint32_t response;
+    int a;
 
     spdm_context = m_spdm_context;
 
     heartbeat_period = 0;
     libspdm_zero_mem(measurement_hash, sizeof(measurement_hash));
+
+    printf(">>>libspdm_start_session.... Press any key to continue\n");
+    scanf("%d", &a);
     status = libspdm_start_session(spdm_context, use_psk,
                                    m_use_measurement_summary_hash_type,
                                    m_use_slot_id, m_session_policy, &session_id,
                                    &heartbeat_period, measurement_hash);
+
+    printf(">>>libspdm_start_session is done(%x).... Press any key to continue\n", status);
+    scanf("%d", &a);
+
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
         printf("libspdm_start_session - %x\n", (uint32_t)status);
         return status;
     }
 
+    printf(">>>do_app_session_via_spdm is to start (%x).... Press any key to continue\n", session_id);
+    scanf("%d", &a);
+
     status = do_app_session_via_spdm(session_id);
+    printf(">>>do_app_session_via_spdm is done (%x).... Press any key to continue\n", status);
+    scanf("%d", &a);
+
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
         printf("do_app_session_via_spdm - %x\n", (uint32_t)status);
         return status;
     }
 
     if ((m_exe_session & EXE_SESSION_HEARTBEAT) != 0) {
+        printf(">>>libspdm_heartbeat is to start(%x).... Press any key to continue\n", session_id);
+        scanf("%d", &a);
+
         status = libspdm_heartbeat(spdm_context, session_id);
+        printf(">>>libspdm_heartbeat is done(%x).... Press any key to continue\n", status);
+        scanf("%d", &a);
+
         if (LIBSPDM_STATUS_IS_ERROR(status)) {
             printf("libspdm_heartbeat - %x\n", (uint32_t)status);
         }
     }
 
-    if ((m_exe_session & EXE_SESSION_KEY_UPDATE) != 0) {
-        switch (m_use_key_update_action) {
-        case LIBSPDM_KEY_UPDATE_ACTION_REQUESTER:
-            status =
-                libspdm_key_update(spdm_context, session_id, true);
-            if (LIBSPDM_STATUS_IS_ERROR(status)) {
-                printf("libspdm_key_update - %x\n",
-                       (uint32_t)status);
-            }
-            break;
+//     if ((m_exe_session & EXE_SESSION_KEY_UPDATE) != 0) {
+//         switch (m_use_key_update_action) {
+//         case LIBSPDM_KEY_UPDATE_ACTION_REQUESTER:
+//             status =
+//                 libspdm_key_update(spdm_context, session_id, true);
+//             if (LIBSPDM_STATUS_IS_ERROR(status)) {
+//                 printf("libspdm_key_update - %x\n",
+//                        (uint32_t)status);
+//             }
+//             break;
 
-        case LIBSPDM_KEY_UPDATE_ACTION_MAX:
-            status = libspdm_key_update(spdm_context, session_id,
-                                        false);
-            if (LIBSPDM_STATUS_IS_ERROR(status)) {
-                printf("libspdm_key_update - %x\n",
-                       (uint32_t)status);
-            }
-            break;
+//         case LIBSPDM_KEY_UPDATE_ACTION_MAX:
+//             status = libspdm_key_update(spdm_context, session_id,
+//                                         false);
+//             if (LIBSPDM_STATUS_IS_ERROR(status)) {
+//                 printf("libspdm_key_update - %x\n",
+//                        (uint32_t)status);
+//             }
+//             break;
 
-        case LIBSPDM_KEY_UPDATE_ACTION_RESPONDER:
-            response_size = 0;
-            result = communicate_platform_data(
-                m_socket,
-                SOCKET_SPDM_COMMAND_OOB_ENCAP_KEY_UPDATE, NULL,
-                0, &response, &response_size, NULL);
-            if (!result) {
-                printf("communicate_platform_data - SOCKET_SPDM_COMMAND_OOB_ENCAP_KEY_UPDATE fail\n");
-            } else {
-#if (LIBSPDM_ENABLE_CAPABILITY_MUT_AUTH_CAP) || (LIBSPDM_ENABLE_CAPABILITY_ENCAP_CAP)
-                status = libspdm_send_receive_encap_request(
-                    spdm_context, &session_id);
-                if (LIBSPDM_STATUS_IS_ERROR(status)) {
-                    printf("libspdm_send_receive_encap_request - libspdm_key_update - %x\n",
-                           (uint32_t)status);
-                }
-#endif
-            }
-            break;
+//         case LIBSPDM_KEY_UPDATE_ACTION_RESPONDER:
+//             response_size = 0;
+//             result = communicate_platform_data(
+//                 m_socket,
+//                 SOCKET_SPDM_COMMAND_OOB_ENCAP_KEY_UPDATE, NULL,
+//                 0, &response, &response_size, NULL);
+//             if (!result) {
+//                 printf("communicate_platform_data - SOCKET_SPDM_COMMAND_OOB_ENCAP_KEY_UPDATE fail\n");
+//             } else {
+// #if (LIBSPDM_ENABLE_CAPABILITY_MUT_AUTH_CAP) || (LIBSPDM_ENABLE_CAPABILITY_ENCAP_CAP)
+//                 status = libspdm_send_receive_encap_request(
+//                     spdm_context, &session_id);
+//                 if (LIBSPDM_STATUS_IS_ERROR(status)) {
+//                     printf("libspdm_send_receive_encap_request - libspdm_key_update - %x\n",
+//                            (uint32_t)status);
+//                 }
+// #endif
+//             }
+//             break;
 
-        default:
-            LIBSPDM_ASSERT(false);
-            break;
-        }
-    }
+//         default:
+//             LIBSPDM_ASSERT(false);
+//             break;
+//         }
+//     }
 
 #if LIBSPDM_ENABLE_CAPABILITY_MEAS_CAP
-    if ((m_exe_session & EXE_SESSION_MEAS) != 0) {
-        status = do_measurement_via_spdm(&session_id);
-        if (LIBSPDM_STATUS_IS_ERROR(status)) {
-            printf("do_measurement_via_spdm - %x\n",
-                   (uint32_t)status);
-        }
-    }
+    // if ((m_exe_session & EXE_SESSION_MEAS) != 0) {
+    //     status = do_measurement_via_spdm(&session_id);
+    //     if (LIBSPDM_STATUS_IS_ERROR(status)) {
+    //         printf("do_measurement_via_spdm - %x\n",
+    //                (uint32_t)status);
+    //     }
+    // }
 #endif /*LIBSPDM_ENABLE_CAPABILITY_MEAS_CAP*/
 
 #if (LIBSPDM_ENABLE_CAPABILITY_CERT_CAP && LIBSPDM_ENABLE_CAPABILITY_CHAL_CAP)
@@ -174,12 +199,12 @@ libspdm_return_t do_session_via_spdm(bool use_psk)
 #endif
 
     if (m_use_version >= SPDM_MESSAGE_VERSION_12) {
-        status = do_certificate_provising_via_spdm(&session_id);
-        if (LIBSPDM_STATUS_IS_ERROR(status)) {
-            printf("do_certificate_provising_via_spdm - %x\n",
-                   (uint32_t)status);
-            return status;
-        }
+        // status = do_certificate_provising_via_spdm(&session_id);
+        // if (LIBSPDM_STATUS_IS_ERROR(status)) {
+        //     printf("do_certificate_provising_via_spdm - %x\n",
+        //            (uint32_t)status);
+        //     return status;
+        // }
     }
 
     if ((m_exe_session & EXE_SESSION_NO_END) == 0) {

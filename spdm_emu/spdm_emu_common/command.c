@@ -8,8 +8,10 @@
 
 /* hack to add MCTP header for PCAP*/
 #include "industry_standard/mctp.h"
+#include "industry_standard/vtpm.h"
 
 uint32_t m_use_transport_layer = SOCKET_TRANSPORT_TYPE_MCTP;
+// uint32_t m_use_transport_layer = SOCKET_TRANSPORT_TYPE_VTPM;
 
 uint32_t m_use_tcp_handshake = SOCKET_TCP_NO_HANDSHAKE;
 
@@ -170,6 +172,17 @@ bool receive_platform_data(const SOCKET socket, uint32_t *command,
             append_pcap_packet_data(&mctp_header,
                                     sizeof(mctp_header),
                                     receive_buffer, bytes_received);
+        } else if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_VTPM) {
+
+            /* Append mctp_header_t for VTPM*/
+
+            vtpm_header_t vtpm_header;
+            vtpm_header.version = 1;
+            vtpm_header.tag = 0xab;
+            vtpm_header.signature = 0xcdef;
+            append_pcap_packet_data(&vtpm_header,
+                                    sizeof(vtpm_header),
+                                    receive_buffer, bytes_received);
         } else {
             append_pcap_packet_data(NULL, 0, receive_buffer,
                                     bytes_received);
@@ -304,6 +317,18 @@ bool send_platform_data(const SOCKET socket, uint32_t command,
             append_pcap_packet_data(&mctp_header,
                                     sizeof(mctp_header),
                                     send_buffer, bytes_to_send);
+        // }else if (m_use_transport_layer == SOCKET_TRANSPORT_TYPE_VTPM) {
+
+        //     /* Append vtpm_header_t for PCAP*/
+
+        //     vtpm_header_t vtpm_header;
+        //     vtpm_header.version = 1;
+        //     vtpm_header.tag = 0xab;
+        //     vtpm_header.signature = 0xcdef;
+        //     append_pcap_packet_data(&vtpm_header,
+        //                             sizeof(vtpm_header),
+        //                             send_buffer, bytes_to_send);
+
         } else {
             append_pcap_packet_data(NULL, 0, send_buffer,
                                     bytes_to_send);

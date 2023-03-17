@@ -33,7 +33,7 @@ struct in_addr m_ip_address = { 0x0100007F };
 
 void print_usage(const char *name)
 {
-    printf("\n%s [--trans MCTP|PCI_DOE|TCP|NONE]\n", name);
+    printf("\n%s [--trans MCTP|PCI_DOE|TCP|VTPM|NONE]\n", name);
     printf("   [--tcp_sub HS|NO_HS]\n");
     printf("   [--ver 1.0|1.1|1.2]\n");
     printf("   [--sec_ver 1.0|1.1]\n");
@@ -177,7 +177,8 @@ value_string_entry_t m_transport_value_string_table[] = {
     { SOCKET_TRANSPORT_TYPE_NONE, "NONE"},
     { SOCKET_TRANSPORT_TYPE_MCTP, "MCTP" },
     { SOCKET_TRANSPORT_TYPE_PCI_DOE, "PCI_DOE" },
-    { SOCKET_TRANSPORT_TYPE_TCP, "TCP"}
+    { SOCKET_TRANSPORT_TYPE_TCP, "TCP"},
+    { SOCKET_TRANSPORT_TYPE_VTPM, "VTPM"}
 };
 
 value_string_entry_t m_tcp_subtype_string_table[] = {
